@@ -17,6 +17,7 @@ const MOCK_GALLERY = [
 
 export default function UploadPage() {
   const [selectedOrder, setSelectedOrder] = useState<number[]>([0]);
+  const [activeSource, setActiveSource] = useState<"gallery" | "camera">("gallery");
 
   const orderedImages = selectedOrder.map((i) => MOCK_GALLERY[i] ?? "");
   const coverImage = orderedImages[0] ?? MOCK_GALLERY[0];
@@ -79,16 +80,24 @@ export default function UploadPage() {
         <div className="flex items-center gap-4 border-b border-gray-100 px-4 py-3">
           <button
             type="button"
-            className="flex items-center gap-1.5 text-body-sm text-gray-600"
+            onClick={() => setActiveSource("camera")}
+            className={`flex items-center gap-1.5 text-body-sm transition-colors active:scale-95 ${
+              activeSource === "camera" ? "text-brand font-medium" : "text-gray-600"
+            }`}
             aria-label="카메라로 촬영"
+            aria-pressed={activeSource === "camera"}
           >
             <Camera size={20} strokeWidth={1.5} />
             <span>촬영</span>
           </button>
           <button
             type="button"
-            className="flex items-center gap-1.5 text-body-sm text-gray-600"
+            onClick={() => setActiveSource("gallery")}
+            className={`flex items-center gap-1.5 text-body-sm transition-colors active:scale-95 ${
+              activeSource === "gallery" ? "text-brand font-medium" : "text-gray-600"
+            }`}
             aria-label="갤러리 선택"
+            aria-pressed={activeSource === "gallery"}
           >
             <ImageIcon size={20} strokeWidth={1.5} />
             <span>갤러리</span>

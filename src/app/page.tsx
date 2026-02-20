@@ -73,8 +73,8 @@ export default function HomePage() {
         </button>
       }
     >
-      {/* Tabs below header */}
-      <div className="sticky top-12 z-30 border-b border-gray-200 bg-white px-4 pt-2">
+      {/* Tabs below header — Figma: 360×52 */}
+      <div className="sticky top-12 z-30 flex h-[52px] items-end border-b border-gray-200 bg-white px-4">
         {tabs}
       </div>
 
@@ -126,60 +126,60 @@ function TodayFeed({ feed }: { feed: ReturnType<typeof useInfiniteQuery<any>> })
       {posts.map((post: any) => (
         <article key={post.id} className="pb-4">
           <Link href={`/detail/${post.id}`} className="block">
-            <div className="relative aspect-square w-full bg-gray-100">
-              <Image
-                src={post.images[0]?.url ?? ""}
-                alt={post.pet.name}
-                fill
-                sizes="(max-width: 360px) 100vw, 360px"
-                className="object-cover"
-              />
-              {/* Heart overlay top-right */}
-              <button
-                type="button"
-                className="absolute right-3 top-3 text-white drop-shadow-md"
-                aria-label={post.likedByMe ? "좋아요 취소" : "좋아요"}
-                onClick={(e) => e.preventDefault()}
-              >
-                <Heart
-                  size={24}
-                  fill={post.likedByMe ? "currentColor" : "none"}
-                  strokeWidth={1.8}
-                  className={post.likedByMe ? "text-brand" : ""}
+            <div className="overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
+              {/* Image */}
+              <div className="relative aspect-square w-full bg-gray-100">
+                <Image
+                  src={post.images[0]?.url ?? ""}
+                  alt={post.pet.name}
+                  fill
+                  sizes="(max-width: 360px) 100vw, 360px"
+                  className="object-cover"
                 />
-              </button>
-              {/* Swipe dots */}
-              {post.images.length > 1 && (
-                <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
-                  {post.images.map((_: any, idx: number) => (
-                    <div
-                      key={idx}
-                      className={`h-1.5 w-1.5 rounded-full ${
-                        idx === 0 ? "bg-white" : "bg-white/50"
-                      }`}
-                    />
-                  ))}
+                <button
+                  type="button"
+                  className="absolute right-3 top-3 text-white drop-shadow-md"
+                  aria-label={post.likedByMe ? "좋아요 취소" : "좋아요"}
+                  onClick={(e) => e.preventDefault()}
+                >
+                  <Heart
+                    size={24}
+                    fill={post.likedByMe ? "currentColor" : "none"}
+                    strokeWidth={1.8}
+                    className={post.likedByMe ? "text-brand" : ""}
+                  />
+                </button>
+                {post.images.length > 1 && (
+                  <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
+                    {post.images.map((_: any, idx: number) => (
+                      <div
+                        key={idx}
+                        className={`h-1.5 w-1.5 rounded-full ${
+                          idx === 0 ? "bg-white" : "bg-white/50"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+              {/* Card info — 이미지와 붙어있는 하단 영역, 흰색 배경 */}
+              <div className="bg-white px-4 py-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-body-sm font-bold text-brand">{post.pet.name}</span>
+                  <span className="text-caption text-gray-500">{formatDate(post.createdAt)}</span>
                 </div>
-              )}
+                <div className="mt-0.5 flex items-center justify-between">
+                  <span className="text-caption text-gray-600">{post.author.nickname}</span>
+                  {post.location && (
+                    <span className="flex items-center gap-0.5 text-caption text-gray-500">
+                      <MapPin size={12} strokeWidth={1.5} />
+                      {post.location}
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
           </Link>
-
-          {/* Card info — 폴라로이드 스타일 (크림 배경, 테두리, 그림자) */}
-          <div className="mx-4 mt-3 rounded-md border border-gray-200 bg-[#F5F0E8] px-4 py-3 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
-            <div className="flex items-center justify-between">
-              <span className="text-body-sm font-bold text-brand">{post.pet.name}</span>
-              <span className="text-caption text-gray-500">{formatDate(post.createdAt)}</span>
-            </div>
-            <div className="mt-0.5 flex items-center justify-between">
-              <span className="text-caption text-gray-600">{post.author.nickname}</span>
-              {post.location && (
-                <span className="flex items-center gap-0.5 text-caption text-gray-500">
-                  <MapPin size={12} strokeWidth={1.5} />
-                  {post.location}
-                </span>
-              )}
-            </div>
-          </div>
         </article>
       ))}
 
