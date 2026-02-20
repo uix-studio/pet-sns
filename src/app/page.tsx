@@ -109,7 +109,7 @@ function TodayFeed({ feed }: { feed: ReturnType<typeof useInfiniteQuery<any>> })
   const posts = data?.pages.flatMap((p) => p.data) ?? [];
 
   return (
-    <div className="divide-y divide-gray-100">
+    <div className="space-y-4 py-4">
       {isLoading &&
         [1, 2, 3].map((i) => (
           <div key={i} className="px-4 py-4">
@@ -124,9 +124,9 @@ function TodayFeed({ feed }: { feed: ReturnType<typeof useInfiniteQuery<any>> })
       )}
 
       {posts.map((post: any) => (
-        <article key={post.id} className="pb-4">
-          <Link href={`/detail/${post.id}`} className="block">
-            <div className="overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
+        <article key={post.id}>
+          <Link href={`/detail/${post.id}`} className="block px-4">
+            <div className="overflow-hidden rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
               {/* Image */}
               <div className="relative aspect-square w-full bg-gray-100">
                 <Image
@@ -138,7 +138,7 @@ function TodayFeed({ feed }: { feed: ReturnType<typeof useInfiniteQuery<any>> })
                 />
                 <button
                   type="button"
-                  className="absolute right-3 top-3 text-white drop-shadow-md"
+                  className="absolute right-3 top-4 text-white drop-shadow-md"
                   aria-label={post.likedByMe ? "좋아요 취소" : "좋아요"}
                   onClick={(e) => e.preventDefault()}
                 >
