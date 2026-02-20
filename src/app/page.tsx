@@ -162,16 +162,16 @@ function TodayFeed({ feed }: { feed: ReturnType<typeof useInfiniteQuery<any>> })
                   </div>
                 )}
               </div>
-              {/* Card info — 이미지와 붙어있는 하단 영역, 흰색 배경 */}
-              <div className="bg-white px-4 py-3">
+              {/* Card info — py-4 px-3 (16px 위아래, 12px 양옆) */}
+              <div className="bg-white px-3 py-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-body-sm font-bold text-brand">{post.pet.name}</span>
-                  <span className="text-caption text-gray-500">{formatDate(post.createdAt)}</span>
+                  <span className="text-body-sm font-bold text-coolGray-800">{post.pet.name}</span>
+                  <span className="text-caption text-coolGray-800">{formatDate(post.createdAt)}</span>
                 </div>
                 <div className="mt-0.5 flex items-center justify-between">
-                  <span className="text-caption text-gray-600">{post.author.nickname}</span>
+                  <span className="text-caption text-coolGray-800">{post.author.nickname}</span>
                   {post.location && (
-                    <span className="flex items-center gap-0.5 text-caption text-gray-500">
+                    <span className="flex items-center gap-0.5 text-caption text-coolGray-800">
                       <MapPin size={12} strokeWidth={1.5} />
                       {post.location}
                     </span>
