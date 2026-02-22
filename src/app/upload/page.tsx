@@ -179,24 +179,6 @@ export default function UploadPage() {
               <br />
               사진을 추가해 주세요
             </p>
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={handleCameraClick}
-                className="flex items-center gap-1.5 rounded-full bg-gray-100 px-4 py-2.5 text-body-sm text-gray-700 active:bg-gray-200"
-              >
-                <Camera size={18} strokeWidth={1.5} />
-                촬영하기
-              </button>
-              <button
-                type="button"
-                onClick={handleGalleryClick}
-                className="flex items-center gap-1.5 rounded-full bg-brand px-4 py-2.5 text-body-sm text-white active:bg-brand/90"
-              >
-                <ImageIcon size={18} strokeWidth={1.5} />
-                갤러리 열기
-              </button>
-            </div>
           </div>
         )}
 

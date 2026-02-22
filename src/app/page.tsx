@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { Heart, MapPin, Crown, Bell } from "lucide-react";
+import { Heart, MapPin, Crown, Bell, UserPlus, UserCheck } from "lucide-react";
 import { fetchFeed, fetchRankingMonthly } from "@/lib/api";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { useLikes } from "@/lib/likes-context";
@@ -111,7 +111,7 @@ function TodayFeed({ feed }: { feed: ReturnType<typeof useInfiniteQuery<any>> })
   const posts = data?.pages.flatMap((p) => p.data) ?? [];
 
   return (
-    <div className="space-y-3 bg-[#EFEFEF] pb-3">
+    <div className="space-y-3 bg-white pb-3">
       {isLoading &&
         [1, 2, 3].map((i) => (
           <div key={i}>
@@ -126,66 +126,7 @@ function TodayFeed({ feed }: { feed: ReturnType<typeof useInfiniteQuery<any>> })
       )}
 
       {posts.map((post: any) => (
-        <article key={post.id}>
-          <Link href={`/detail/${post.id}`} className="block">
-            <div className="overflow-hidden bg-white">
-              {/* Image — Figma: 360×400 (9:10) */}
-              <div className="relative aspect-[9/10] w-full bg-gray-100">
-                <Image
-                  src={post.images[0]?.url ?? ""}
-                  alt={post.pet.name}
-                  fill
-                  sizes="(max-width: 360px) 100vw, 360px"
-                  className="object-cover"
-                />
-                <button
-                  type="button"
-                  className="absolute right-3 top-4 text-white drop-shadow-md transition-transform active:scale-110"
-                  aria-label={isLiked(post.id) ? "좋아요 취소" : "좋아요"}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    toggle(post.id);
-                  }}
-                >
-                  <Heart
-                    size={24}
-                    fill={isLiked(post.id) ? "currentColor" : "none"}
-                    strokeWidth={1.8}
-                    className={isLiked(post.id) ? "text-brand" : ""}
-                  />
-                </button>
-                {post.images.length > 1 && (
-                  <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-[4px]">
-                    {post.images.map((_: any, idx: number) => (
-                      <div
-                        key={idx}
-                        className={`h-1.5 w-[15px] rounded-full ${
-                          idx === 0 ? "bg-white/80" : "bg-white/40"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-              {/* Card info — Figma: px-12 py-16, 흰색 배경 */}
-              <div className="bg-white px-3 py-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-body-lg font-semibold text-brand">{post.pet.name}</span>
-                  <span className="text-body-sm text-coolGray-800">{formatDate(post.createdAt)}</span>
-                </div>
-                <div className="mt-0.5 flex items-center justify-between">
-                  <span className="text-body-sm text-coolGray-800">{post.author.nickname}</span>
-                  {post.location && (
-                    <span className="flex items-center gap-1 text-caption text-black">
-                      <MapPin size={16} strokeWidth={1.5} />
-                      {post.location}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          </Link>
-        </article>
+        <FeedCard key={post.id} post={post} isLiked={isLiked(post.id)} onToggleLike={() => toggle(post.id)} />
       ))}
 
       {/* 무한 스크롤 sentinel */}
@@ -199,18 +140,112 @@ function TodayFeed({ feed }: { feed: ReturnType<typeof useInfiniteQuery<any>> })
   );
 }
 
-function MonthlyRanking({ ranking }: { ranking: ReturnType<typeof useQuery<any>> }) {
-  const { data, isLoading, error } = ranking;
+function FeedCard({
+  post,
+  isLiked,
+  onToggleLike,
+}: {
+  post: any;
+  isLiked: boolean;
+  onToggleLike: () => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const [following, setFollowing] = useState(false);
+
   return (
-    <div className="p-4 space-y-4">
-      {isLoading && (
-        <div className="space-y-3">
-          <div className="aspect-[4/3] animate-pulse rounded-xl bg-gray-100" />
-          <div className="grid grid-cols-2 gap-3">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="aspect-square animate-pulse rounded-xl bg-gray-100" />
+    <article className="overflow-hidden bg-white">
+      <div className="relative aspect-[9/10] w-full bg-gray-100">
+        <Image
+          src={post.images[0]?.url ?? ""}
+          alt={post.pet.name}
+          fill
+          sizes="(max-width: 360px) 100vw, 360px"
+          className="object-cover"
+        />
+        <button
+          type="button"
+          className="absolute right-3 top-4 text-white drop-shadow-md transition-transform active:scale-110"
+          aria-label={isLiked ? "좋아요 취소" : "좋아요"}
+          onClick={onToggleLike}
+        >
+          <Heart
+            size={24}
+            fill={isLiked ? "currentColor" : "none"}
+            strokeWidth={1.8}
+            className={isLiked ? "text-brand" : ""}
+          />
+        </button>
+        {post.images.length > 1 && (
+          <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-[4px]">
+            {post.images.map((_: any, idx: number) => (
+              <div
+                key={idx}
+                className={`h-1.5 w-[15px] rounded-full ${idx === 0 ? "bg-white/80" : "bg-white/40"}`}
+              />
             ))}
           </div>
+        )}
+      </div>
+
+      <div className="bg-white px-3 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-body-lg font-semibold text-brand">{post.pet.name}</span>
+            <span className="text-body-sm text-coolGray-800">{post.author.nickname}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setFollowing((p) => !p)}
+              className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                following
+                  ? "bg-gray-100 text-gray-600"
+                  : "bg-brand text-white"
+              }`}
+            >
+              {following ? <UserCheck size={12} /> : <UserPlus size={12} />}
+              {following ? "팔로잉" : "팔로우"}
+            </button>
+          </div>
+        </div>
+
+        {post.description && (
+          <p className="mt-1.5 text-body-sm leading-relaxed text-coolGray-800">
+            {expanded || (post.description?.length ?? 0) <= 60
+              ? post.description
+              : post.description.slice(0, 60) + "..."}
+            {(post.description?.length ?? 0) > 60 && !expanded && (
+              <button type="button" onClick={() => setExpanded(true)} className="ml-1 text-gray-400">
+                더보기
+              </button>
+            )}
+          </p>
+        )}
+
+        <div className="mt-1.5 flex items-center justify-between">
+          <span className="text-caption text-gray-400">{formatDate(post.createdAt)}</span>
+          {post.location && (
+            <span className="flex items-center gap-1 text-caption text-gray-400">
+              <MapPin size={13} strokeWidth={1.5} />
+              {post.location}
+            </span>
+          )}
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function MonthlyRanking({ ranking }: { ranking: ReturnType<typeof useQuery<any>> }) {
+  const { data, isLoading, error } = ranking;
+  const { isLiked, toggle } = useLikes();
+
+  return (
+    <div className="space-y-3 bg-white pb-3">
+      {isLoading && (
+        <div className="space-y-3 p-4">
+          <div className="aspect-[4/3] animate-pulse rounded-xl bg-gray-100" />
+          <div className="aspect-[4/3] animate-pulse rounded-xl bg-gray-100" />
         </div>
       )}
 
@@ -220,87 +255,67 @@ function MonthlyRanking({ ranking }: { ranking: ReturnType<typeof useQuery<any>>
         </p>
       )}
 
-      {data != null && data.length > 0 && (
-        <>
-          {/* 1st place */}
-          <Link href={`/detail/${data[0].post.id}`} className="block">
-            <div className="overflow-hidden rounded-xl">
-              <div className="relative aspect-[4/3] w-full">
-                <Image
-                  src={data[0].post.images[0]?.url ?? ""}
-                  alt={`1위 ${data[0].post.pet.name}`}
-                  fill
-                  sizes="100vw"
-                  className="object-cover"
-                />
-                <button
-                  type="button"
-                  className="absolute right-3 top-3 text-white drop-shadow-md"
-                  aria-label="좋아요"
-                  onClick={(e) => e.preventDefault()}
-                >
-                  <Heart size={24} strokeWidth={1.8} fill="none" />
-                </button>
-                <div className="absolute bottom-0 inset-x-0 flex items-center gap-2 bg-gradient-to-t from-black/60 to-transparent p-4">
-                  <Crown size={20} className="text-yellow-400 shrink-0" fill="currentColor" />
-                  <span className="text-body-sm font-bold text-white">1st · {data[0].post.author.nickname}</span>
-                </div>
+      {data?.map((item: any) => (
+        <article key={item.post.id} className="overflow-hidden bg-white">
+          <div className="relative aspect-[9/10] w-full bg-gray-100">
+            <Image
+              src={item.post.images[0]?.url ?? ""}
+              alt={`${item.rank}위 ${item.post.pet.name}`}
+              fill
+              sizes="(max-width: 360px) 100vw, 360px"
+              className="object-cover"
+            />
+            {item.rank <= 3 && (
+              <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-black/50 px-2.5 py-1 backdrop-blur-sm">
+                <Crown size={14} className="text-yellow-400" fill="currentColor" />
+                <span className="text-[11px] font-bold text-white">{item.rank}위</span>
               </div>
-              <div className="bg-white px-4 py-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-body-sm font-bold text-brand">{data[0].post.pet.name}</span>
-                  <span className="text-caption text-gray-500">{formatDate(data[0].post.createdAt)}</span>
-                </div>
-                <p className="mt-0.5 text-caption text-gray-600">{data[0].post.author.nickname}</p>
-              </div>
-            </div>
-          </Link>
-
-          {/* 2nd ~ 6th */}
-          <div className="grid grid-cols-2 gap-3">
-            {data.slice(1, 7).map((item: any) => (
-              <Link key={item.post.id} href={`/detail/${item.post.id}`}>
-                <div className="overflow-hidden rounded-xl bg-white">
-                  <div className="relative aspect-square w-full">
-                    <Image
-                      src={item.post.images[0]?.url ?? ""}
-                      alt={`${item.rank}위 ${item.post.pet.name}`}
-                      fill
-                      sizes="50vw"
-                      className="object-cover"
-                    />
-                    <button
-                      type="button"
-                      className="absolute right-2 top-2 text-white drop-shadow-md"
-                      aria-label="좋아요"
-                      onClick={(e) => e.preventDefault()}
-                    >
-                      <Heart size={20} strokeWidth={1.8} fill="none" />
-                    </button>
-                  </div>
-                  <div className="px-3 py-2">
-                    <div className="flex items-center justify-between">
-                      <span className="truncate text-body-sm font-bold text-brand">{item.post.pet.name}</span>
-                      <span className="text-caption text-gray-500">{formatDate(item.post.createdAt)}</span>
-                    </div>
-                    <p className="mt-0.5 flex items-center gap-1 truncate text-caption text-gray-600">
-                      {item.rank <= 3 && (
-                        <Crown
-                          size={12}
-                          className="shrink-0 text-yellow-500"
-                          fill="currentColor"
-                          aria-hidden
-                        />
-                      )}
-                      {item.post.author.nickname}
-                    </p>
-                  </div>
-                </div>
-              </Link>
-            ))}
+            )}
+            <button
+              type="button"
+              className="absolute right-3 top-4 text-white drop-shadow-md transition-transform active:scale-110"
+              aria-label={isLiked(item.post.id) ? "좋아요 취소" : "좋아요"}
+              onClick={() => toggle(item.post.id)}
+            >
+              <Heart
+                size={24}
+                fill={isLiked(item.post.id) ? "currentColor" : "none"}
+                strokeWidth={1.8}
+                className={isLiked(item.post.id) ? "text-brand" : ""}
+              />
+            </button>
           </div>
-        </>
-      )}
+
+          <div className="bg-white px-3 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-body-lg font-semibold text-brand">{item.post.pet.name}</span>
+                <span className="text-body-sm text-coolGray-800">{item.post.author.nickname}</span>
+              </div>
+              {item.rank <= 3 && (
+                <div className="flex items-center gap-1 text-caption text-yellow-600">
+                  <Crown size={12} fill="currentColor" />
+                  <span className="font-medium">{item.rank}위</span>
+                </div>
+              )}
+            </div>
+            {item.post.description && (
+              <p className="mt-1.5 text-body-sm leading-relaxed text-coolGray-800">
+                {item.post.description}
+              </p>
+            )}
+            <div className="mt-1.5 flex items-center justify-between">
+              <span className="text-caption text-gray-400">{formatDate(item.post.createdAt)}</span>
+              {item.post.location && (
+                <span className="flex items-center gap-1 text-caption text-gray-400">
+                  <MapPin size={13} strokeWidth={1.5} />
+                  {item.post.location}
+                </span>
+              )}
+            </div>
+          </div>
+        </article>
+      ))}
     </div>
   );
 }

@@ -1,8 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { Heart, ChevronRight } from "lucide-react";
+import { Heart } from "lucide-react";
 import { fetchFeed } from "@/lib/api";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { ImageGrid } from "@/components/ui/ImageGrid";
@@ -41,12 +40,6 @@ export default function LikePage() {
   return (
     <MobileLayout
       title="내가 좋아하는 사진"
-      headerRight={
-        <Link href="/like/all" className="flex items-center text-caption text-gray-500">
-          더보기
-          <ChevronRight size={14} />
-        </Link>
-      }
     >
       <div className="p-4">
         {isLoading && (

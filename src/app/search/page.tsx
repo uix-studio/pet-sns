@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Search as SearchIcon, LayoutGrid } from "lucide-react";
-import { fetchSearch, fetchPopularTags, fetchBreeds } from "@/lib/api";
+import { fetchSearch, fetchPopularTags } from "@/lib/api";
 import type { SearchFilterType } from "@/lib/types";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import Image from "next/image";
@@ -12,11 +12,14 @@ import Link from "next/link";
 const MASONRY_HEIGHTS = [192, 224, 176, 240, 208, 160, 224, 192];
 
 const FILTER_LABELS: Record<SearchFilterType, string> = {
-  tag: "태그",
-  pet: "반려동물명",
-  nickname: "닉네임",
+  tag: "추천 태그",
   breed: "동물 종류",
 };
+
+const REGISTERED_BREEDS = [
+  "골든 리트리버", "포메라니안", "말티즈", "푸들",
+  "꼬숑 (말티즈+비숑)", "말티푸 (말티즈+푸들)", "페르시안", "브리티시 숏헤어",
+];
 
 export default function SearchPage() {
   const [query, setQuery] = useState("");
@@ -29,10 +32,6 @@ export default function SearchPage() {
   const { data: popularTags } = useQuery({
     queryKey: ["popularTags"],
     queryFn: fetchPopularTags,
-  });
-  const { data: breeds } = useQuery({
-    queryKey: ["breeds"],
-    queryFn: fetchBreeds,
   });
 
   const photos = data?.data ?? [];
@@ -62,9 +61,9 @@ export default function SearchPage() {
           </button>
         </div>
 
-        {/* 검색 필터: 동물 종류, 반려동물명, 닉네임, 태그 */}
+        {/* 검색 필터: 추천태그, 동물종류 */}
         <div className="mt-2 flex flex-wrap gap-2">
-          {(["tag", "pet", "nickname", "breed"] as const).map((type) => (
+          {(["tag", "breed"] as const).map((type) => (
             <button
               key={type}
               type="button"
@@ -78,28 +77,28 @@ export default function SearchPage() {
           ))}
         </div>
 
-        {/* 인기 태그 / 품종 쇼트컷 */}
+        {/* 추천 태그 / 등록된 품종 */}
         <div className="mt-3 flex flex-wrap gap-2">
           {filterType === "tag" &&
-            popularTags?.slice(0, 6).map((tag) => (
+            popularTags?.slice(0, 8).map((tag) => (
               <button
                 key={tag}
                 type="button"
                 onClick={() => setQuery(tag)}
-                className="rounded-full border border-gray-200 bg-white px-3 py-1 text-caption text-gray-600"
+                className="rounded-full border border-gray-200 bg-white px-3 py-1 text-caption text-gray-600 active:bg-gray-50"
               >
                 #{tag}
               </button>
             ))}
           {filterType === "breed" &&
-            breeds?.slice(0, 5).map((b) => (
+            REGISTERED_BREEDS.map((b) => (
               <button
-                key={b.id}
+                key={b}
                 type="button"
-                onClick={() => setQuery(b.name_ko)}
-                className="rounded-full border border-gray-200 bg-white px-3 py-1 text-caption text-gray-600"
+                onClick={() => setQuery(b)}
+                className="rounded-full border border-gray-200 bg-white px-3 py-1 text-caption text-gray-600 active:bg-gray-50"
               >
-                {b.name_ko}
+                {b}
               </button>
             ))}
         </div>

@@ -3,9 +3,18 @@
 import { useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowDownUp, Check, Pencil, Trash2, X, Camera } from "lucide-react";
+import { ArrowDownUp, Check, Pencil, Trash2, X, Camera, ChevronDown } from "lucide-react";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { Avatar } from "@/components/ui/Avatar";
+
+const BREED_LIST = [
+  "골든 리트리버", "포메라니안", "말티즈", "시바견", "비숑 프리제",
+  "푸들", "치와와", "웰시코기", "프렌치 불독", "보더콜리",
+  "페르시안", "러시안 블루", "브리티시 숏헤어", "스코티시 폴드", "랙돌",
+  "꼬숑 (말티즈+비숑)", "말티푸 (말티즈+푸들)", "폼스키 (포메라니안+허스키)",
+  "코카푸 (코커스패니얼+푸들)", "골든두들 (골든리트리버+푸들)",
+  "믹스견", "믹스묘",
+];
 
 interface MyPost {
   id: string;
@@ -42,6 +51,47 @@ export default function MyPage() {
   const petNameRef = useRef<HTMLInputElement>(null);
 
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
+
+  const [petBreed, setPetBreed] = useState("");
+  const [isEditingBreed, setIsEditingBreed] = useState(false);
+  const [breedInput, setBreedInput] = useState("");
+  const [showBreedDropdown, setShowBreedDropdown] = useState(false);
+  const [isCustomBreed, setIsCustomBreed] = useState(false);
+  const breedRef = useRef<HTMLInputElement>(null);
+
+  const filteredBreeds = breedInput.trim()
+    ? BREED_LIST.filter((b) => b.includes(breedInput.trim()))
+    : BREED_LIST;
+
+  const startEditingBreed = () => {
+    setBreedInput(petBreed);
+    setIsEditingBreed(true);
+    setIsCustomBreed(false);
+    setShowBreedDropdown(true);
+    setTimeout(() => breedRef.current?.focus(), 0);
+  };
+
+  const selectBreed = (breed: string) => {
+    setPetBreed(breed);
+    setBreedInput(breed);
+    setIsEditingBreed(false);
+    setShowBreedDropdown(false);
+  };
+
+  const saveBreed = () => {
+    const trimmed = breedInput.trim();
+    if (trimmed) setPetBreed(trimmed);
+    setIsEditingBreed(false);
+    setShowBreedDropdown(false);
+    setIsCustomBreed(false);
+  };
+
+  const cancelBreed = () => {
+    setBreedInput(petBreed);
+    setIsEditingBreed(false);
+    setShowBreedDropdown(false);
+    setIsCustomBreed(false);
+  };
 
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [editingDesc, setEditingDesc] = useState("");
@@ -222,13 +272,66 @@ export default function MyPage() {
                 <Pencil size={11} strokeWidth={1.5} />
               </button>
             )}
+
+            {/* 동물 종류 */}
+            {isEditingBreed ? (
+              <div className="relative mt-1">
+                <div className="flex items-center gap-1.5">
+                  <input
+                    ref={breedRef}
+                    value={breedInput}
+                    onChange={(e) => {
+                      setBreedInput(e.target.value);
+                      setShowBreedDropdown(true);
+                      setIsCustomBreed(false);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") saveBreed();
+                      if (e.key === "Escape") cancelBreed();
+                    }}
+                    placeholder="종류 검색 또는 직접 입력"
+                    className="w-36 rounded border border-brand px-1.5 py-0.5 text-caption text-gray-700 outline-none focus:ring-1 focus:ring-brand"
+                    maxLength={20}
+                  />
+                  <button type="button" onClick={saveBreed} className="flex h-5 w-5 items-center justify-center rounded-full bg-brand text-white" aria-label="종류 저장">
+                    <Check size={12} strokeWidth={2.5} />
+                  </button>
+                  <button type="button" onClick={cancelBreed} className="flex h-5 w-5 items-center justify-center rounded-full bg-gray-200 text-gray-500" aria-label="종류 편집 취소">
+                    <X size={12} strokeWidth={2.5} />
+                  </button>
+                </div>
+                {showBreedDropdown && filteredBreeds.length > 0 && (
+                  <div className="absolute left-0 top-full z-20 mt-1 max-h-40 w-52 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+                    {filteredBreeds.map((b) => (
+                      <button key={b} type="button" onClick={() => selectBreed(b)} className="block w-full px-3 py-2 text-left text-caption text-gray-700 hover:bg-gray-50 active:bg-gray-100">
+                        {b}
+                      </button>
+                    ))}
+                    {breedInput.trim() && !BREED_LIST.includes(breedInput.trim()) && (
+                      <button type="button" onClick={() => { setIsCustomBreed(true); setShowBreedDropdown(false); }} className="block w-full border-t border-gray-100 px-3 py-2 text-left text-caption font-medium text-brand">
+                        &quot;{breedInput.trim()}&quot; 직접 입력
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={startEditingBreed}
+                className="mt-1 flex items-center gap-1 text-caption text-gray-400 transition-colors active:text-brand"
+              >
+                {petBreed || "동물 종류 등록"}
+                {petBreed ? <Pencil size={10} strokeWidth={1.5} /> : <ChevronDown size={12} strokeWidth={1.5} />}
+              </button>
+            )}
           </div>
 
           <Link
             href="/my/settings"
             className="rounded-lg border border-gray-200 px-3 py-1.5 text-body-sm text-gray-600 active:bg-gray-50"
           >
-            설정
+            계정
           </Link>
         </div>
 
@@ -367,7 +470,7 @@ export default function MyPage() {
 
                       {/* Non-manage mode: hover/long-press actions */}
                       {!isManaging && !isEditing && (
-                        <div className="absolute right-1 top-1 flex gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                        <div className="absolute right-1 top-1 opacity-0 transition-opacity group-hover:opacity-100">
                           <button
                             type="button"
                             onClick={() => startEditingPost(post)}
@@ -375,14 +478,6 @@ export default function MyPage() {
                             aria-label="설명 수정"
                           >
                             <Pencil size={11} strokeWidth={2} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteSingle(post.id)}
-                            className="flex h-6 w-6 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm"
-                            aria-label="삭제"
-                          >
-                            <Trash2 size={11} strokeWidth={2} />
                           </button>
                         </div>
                       )}

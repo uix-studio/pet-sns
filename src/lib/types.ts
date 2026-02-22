@@ -37,7 +37,7 @@ export interface RankingItem {
   post: FeedPost;
 }
 
-export type SearchFilterType = "tag" | "pet" | "nickname" | "breed";
+export type SearchFilterType = "tag" | "breed";
 
 export interface SearchParams {
   q?: string;
