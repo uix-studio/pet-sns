@@ -1,41 +1,18 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Camera, ImageIcon, Check, GripVertical, X } from "lucide-react";
+import { Camera, ImageIcon, X } from "lucide-react";
 import { MobileLayout } from "@/components/layout/MobileLayout";
-
-interface SelectedImage {
-  id: string;
-  url: string;
-  file: File | null;
-}
+import { useUpload } from "@/lib/upload-context";
 
 export default function UploadPage() {
-  const [images, setImages] = useState<SelectedImage[]>([]);
+  const { images, addFiles, removeImage, reorder } = useUpload();
   const [activeSource, setActiveSource] = useState<"gallery" | "camera" | null>(null);
 
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    return () => {
-      images.forEach((img) => {
-        if (img.url.startsWith("blob:")) URL.revokeObjectURL(img.url);
-      });
-    };
-  }, [images]);
-
-  const addFiles = useCallback((files: FileList | null) => {
-    if (!files || files.length === 0) return;
-    const newImages: SelectedImage[] = Array.from(files).map((file) => ({
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      url: URL.createObjectURL(file),
-      file,
-    }));
-    setImages((prev) => [...prev, ...newImages]);
-  }, []);
 
   const handleGalleryClick = () => {
     setActiveSource("gallery");
@@ -47,14 +24,6 @@ export default function UploadPage() {
     cameraInputRef.current?.click();
   };
 
-  const removeImage = (id: string) => {
-    setImages((prev) => {
-      const img = prev.find((i) => i.id === id);
-      if (img?.url.startsWith("blob:")) URL.revokeObjectURL(img.url);
-      return prev.filter((i) => i.id !== id);
-    });
-  };
-
   const handleDragStart = (e: React.DragEvent, fromIdx: number) => {
     e.dataTransfer.setData("text/plain", String(fromIdx));
     e.dataTransfer.effectAllowed = "move";
@@ -63,13 +32,7 @@ export default function UploadPage() {
   const handleDrop = (e: React.DragEvent, toIdx: number) => {
     e.preventDefault();
     const fromIdx = parseInt(e.dataTransfer.getData("text/plain"), 10);
-    if (Number.isNaN(fromIdx) || fromIdx === toIdx) return;
-    setImages((prev) => {
-      const arr = [...prev];
-      const [removed] = arr.splice(fromIdx, 1);
-      arr.splice(toIdx, 0, removed);
-      return arr;
-    });
+    if (!Number.isNaN(fromIdx)) reorder(fromIdx, toIdx);
   };
 
   const coverImage = images[0]?.url ?? null;
@@ -86,19 +49,25 @@ export default function UploadPage() {
         <span className="text-body-base font-bold text-neutral-black-800">사진 게시</span>
       }
       headerRight={
-        <Link href="/upload/form" className="text-body-sm font-medium text-brand">
-          다음
-        </Link>
+        images.length > 0 ? (
+          <Link href="/upload/form" className="text-body-sm font-medium text-brand">
+            다음
+          </Link>
+        ) : (
+          <span className="text-body-sm text-gray-400">다음</span>
+        )
       }
     >
-      {/* Hidden native file inputs */}
       <input
         ref={galleryInputRef}
         type="file"
         accept="image/*"
         multiple
         className="hidden"
-        onChange={(e) => addFiles(e.target.files)}
+        onChange={(e) => {
+          addFiles(e.target.files);
+          e.target.value = "";
+        }}
       />
       <input
         ref={cameraInputRef}
@@ -106,11 +75,14 @@ export default function UploadPage() {
         accept="image/*"
         capture="environment"
         className="hidden"
-        onChange={(e) => addFiles(e.target.files)}
+        onChange={(e) => {
+          addFiles(e.target.files);
+          e.target.value = "";
+        }}
       />
 
       <div className="flex flex-col">
-        {/* Preview — 첫 번째 사진이 커버 */}
+        {/* Cover preview */}
         <div className="relative aspect-[4/3] w-full bg-gray-100">
           {coverImage ? (
             <Image
@@ -130,7 +102,7 @@ export default function UploadPage() {
           )}
         </div>
 
-        {/* Camera / Gallery action row */}
+        {/* Camera / Gallery */}
         <div className="flex items-center gap-4 border-b border-gray-100 px-4 py-3">
           <button
             type="button"
@@ -138,7 +110,6 @@ export default function UploadPage() {
             className={`flex items-center gap-1.5 text-body-sm transition-colors active:scale-95 ${
               activeSource === "camera" ? "font-medium text-brand" : "text-gray-600"
             }`}
-            aria-label="카메라로 촬영"
           >
             <Camera size={20} strokeWidth={1.5} />
             <span>촬영</span>
@@ -149,61 +120,57 @@ export default function UploadPage() {
             className={`flex items-center gap-1.5 text-body-sm transition-colors active:scale-95 ${
               activeSource === "gallery" ? "font-medium text-brand" : "text-gray-600"
             }`}
-            aria-label="갤러리에서 선택"
           >
             <ImageIcon size={20} strokeWidth={1.5} />
             <span>갤러리</span>
           </button>
         </div>
 
-        {/* 선택된 사진 — 드래그로 순서 변경, 첫 번째에 커버 표기 */}
+        {/* Selected images strip */}
         {images.length > 0 && (
           <div className="border-b border-gray-100 px-2 py-3">
             <p className="mb-2 text-caption text-gray-500">
               드래그해서 순서를 바꿀 수 있어요 · 첫 번째가 커버
             </p>
             <div className="flex gap-2 overflow-x-auto pb-1">
-              {images.map((img, displayIdx) => {
-                const isCover = displayIdx === 0;
-                return (
-                  <div
-                    key={img.id}
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, displayIdx)}
-                    onDragOver={handleDragOver}
-                    onDrop={(e) => handleDrop(e, displayIdx)}
-                    className="relative h-20 w-20 shrink-0 cursor-grab overflow-hidden rounded-lg border-2 border-brand active:cursor-grabbing"
+              {images.map((img, displayIdx) => (
+                <div
+                  key={img.id}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, displayIdx)}
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, displayIdx)}
+                  className="relative h-20 w-20 shrink-0 cursor-grab overflow-hidden rounded-lg border-2 border-brand active:cursor-grabbing"
+                >
+                  <Image
+                    src={img.url}
+                    alt=""
+                    fill
+                    sizes="80px"
+                    className="object-cover"
+                    draggable={false}
+                    unoptimized
+                  />
+                  {displayIdx === 0 && (
+                    <span className="absolute left-1 top-1 rounded bg-brand px-1.5 py-0.5 text-[10px] font-medium text-white">
+                      커버
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => removeImage(img.id)}
+                    className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/50 text-white"
+                    aria-label="사진 삭제"
                   >
-                    <Image
-                      src={img.url}
-                      alt=""
-                      fill
-                      sizes="80px"
-                      className="object-cover"
-                      draggable={false}
-                      unoptimized
-                    />
-                    {isCover && (
-                      <span className="absolute left-1 top-1 rounded bg-brand px-1.5 py-0.5 text-[10px] font-medium text-white">
-                        커버
-                      </span>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => removeImage(img.id)}
-                      className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/50 text-white"
-                      aria-label="사진 삭제"
-                    >
-                      <X size={12} strokeWidth={2.5} />
-                    </button>
-                  </div>
-                );
-              })}
+                    <X size={12} strokeWidth={2.5} />
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
         )}
 
-        {/* 안내 영역 (사진 미선택 시) */}
+        {/* Empty state */}
         {images.length === 0 && (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 py-16 text-center">
             <p className="text-body-sm text-gray-500">
@@ -216,7 +183,7 @@ export default function UploadPage() {
               <button
                 type="button"
                 onClick={handleCameraClick}
-                className="flex items-center gap-1.5 rounded-full bg-gray-100 px-4 py-2.5 text-body-sm text-gray-700 transition-colors active:bg-gray-200"
+                className="flex items-center gap-1.5 rounded-full bg-gray-100 px-4 py-2.5 text-body-sm text-gray-700 active:bg-gray-200"
               >
                 <Camera size={18} strokeWidth={1.5} />
                 촬영하기
@@ -224,7 +191,7 @@ export default function UploadPage() {
               <button
                 type="button"
                 onClick={handleGalleryClick}
-                className="flex items-center gap-1.5 rounded-full bg-brand px-4 py-2.5 text-body-sm text-white transition-colors active:bg-brand/90"
+                className="flex items-center gap-1.5 rounded-full bg-brand px-4 py-2.5 text-body-sm text-white active:bg-brand/90"
               >
                 <ImageIcon size={18} strokeWidth={1.5} />
                 갤러리 열기
@@ -233,7 +200,7 @@ export default function UploadPage() {
           </div>
         )}
 
-        {/* Selection count footer */}
+        {/* Footer */}
         {images.length > 0 && (
           <div className="sticky bottom-0 border-t border-gray-200 bg-white px-4 py-3 text-center text-body-sm text-gray-600">
             선택된 항목 ({images.length}개) · 첫 번째 사진이 커버로 사용돼요
