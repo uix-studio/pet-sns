@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { Heart, MapPin, Crown, Bookmark } from "lucide-react";
+import { Heart, MapPin, Crown } from "lucide-react";
 import { fetchFeed, fetchRankingMonthly } from "@/lib/api";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 
@@ -68,9 +68,11 @@ export default function HomePage() {
         <Image src="/logo-horizontal.svg" alt="멍냥멍냥" width={106} height={24} priority />
       }
       headerRight={
-        <button type="button" className="p-2 text-neutral-black-800" aria-label="북마크">
-          <Bookmark size={22} strokeWidth={1.5} />
-        </button>
+        <Link href="/my" className="flex items-center justify-center" aria-label="마이페이지">
+          <div className="h-7 w-7 overflow-hidden rounded-full bg-coolGray-200">
+            <Image src="/placeholder-1.png" alt="프로필" width={28} height={28} className="object-cover" />
+          </div>
+        </Link>
       }
     >
       {/* Tabs below header — Figma: 360×52 */}
