@@ -1,18 +1,20 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Heart } from "lucide-react";
-import { fetchFeed } from "@/lib/api";
+import { fetchFeed, fetchLikedPosts, type LikedSort } from "@/lib/api";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { ImageGrid } from "@/components/ui/ImageGrid";
 import { useLikes } from "@/lib/likes-context";
 
 export default function LikePage() {
   const { likedIds } = useLikes();
+  const [sort, setSort] = useState<LikedSort>("recent");
 
   const { data: allPosts, isLoading } = useQuery({
-    queryKey: ["feed-all"],
-    queryFn: () => fetchFeed(),
+    queryKey: ["feed-liked", sort],
+    queryFn: () => fetchLikedPosts(undefined, sort),
   });
 
   const likedPosts = (allPosts?.data ?? []).filter((p) => likedIds.has(p.id));
@@ -42,6 +44,30 @@ export default function LikePage() {
       title="내가 좋아하는 사진"
     >
       <div className="p-4">
+        <div className="mb-3 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setSort("recent")}
+            className={`rounded-full px-3 py-1.5 text-caption ${sort === "recent" ? "bg-brand text-white" : "bg-gray-100 text-gray-600"}`}
+          >
+            최신순
+          </button>
+          <button
+            type="button"
+            onClick={() => setSort("oldest")}
+            className={`rounded-full px-3 py-1.5 text-caption ${sort === "oldest" ? "bg-brand text-white" : "bg-gray-100 text-gray-600"}`}
+          >
+            오래된순
+          </button>
+          <button
+            type="button"
+            onClick={() => setSort("likes")}
+            className={`rounded-full px-3 py-1.5 text-caption ${sort === "likes" ? "bg-brand text-white" : "bg-gray-100 text-gray-600"}`}
+          >
+            좋아요수
+          </button>
+        </div>
+
         {isLoading && (
           <div className="grid grid-cols-2 gap-3">
             {[1, 2, 3, 4, 5, 6].map((i) => (

@@ -66,7 +66,7 @@ export default function HomePage() {
   return (
     <MobileLayout
       headerLeft={
-        <Image src="/logo-horizontal.svg" alt="멍냥멍냥" width={106} height={24} priority />
+        <Image src="/logo-horizontal.svg" alt="멍냥멍냥" width={142} height={32} priority />
       }
       headerRight={
         <Link href="/notifications" className="p-2 text-neutral-black-800" aria-label="알림">
