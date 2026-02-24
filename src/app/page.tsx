@@ -69,7 +69,7 @@ export default function HomePage() {
         <Image src="/logo-horizontal.svg" alt="멍냥멍냥" width={142} height={32} priority />
       }
       headerRight={
-        <Link href="/notifications" className="p-2 text-neutral-black-800" aria-label="알림">
+        <Link href="/notifications" className="p-2 text-gray-500" aria-label="알림">
           <Bell size={24} strokeWidth={1.5} />
         </Link>
       }

@@ -55,7 +55,7 @@ export function BottomNav() {
             key={href}
             href={href}
             className={`flex w-[72px] items-center justify-center py-3 transition-colors ${
-              active ? "text-neutral-black-800" : "text-coolGray-600"
+              active ? "text-brand" : "text-coolGray-600"
             }`}
             aria-current={active ? "page" : undefined}
             aria-label={label}
