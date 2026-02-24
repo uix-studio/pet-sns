@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { Heart, MapPin, Crown, Bell, UserPlus, UserCheck } from "lucide-react";
+import { Heart, MapPin, Crown, Bell } from "lucide-react";
 import { fetchFeed, fetchRankingMonthly } from "@/lib/api";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { useLikes } from "@/lib/likes-context";
@@ -149,9 +149,6 @@ function FeedCard({
   isLiked: boolean;
   onToggleLike: () => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
-  const [following, setFollowing] = useState(false);
-
   return (
     <article className="overflow-hidden bg-white">
       <div className="relative aspect-[9/10] w-full bg-gray-100">
@@ -187,46 +184,18 @@ function FeedCard({
         )}
       </div>
 
-      <div className="bg-white py-3">
+      <div className="bg-white px-3 py-2.5">
+        {/* 1행: 펫이름 / 날짜 */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-body-lg font-semibold text-brand">{post.pet.name}</span>
-            <span className="text-body-sm text-coolGray-800">{post.author.nickname}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setFollowing((p) => !p)}
-              className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors ${
-                following
-                  ? "bg-gray-100 text-gray-600"
-                  : "bg-brand text-white"
-              }`}
-            >
-              {following ? <UserCheck size={12} /> : <UserPlus size={12} />}
-              {following ? "팔로잉" : "팔로우"}
-            </button>
-          </div>
+          <span className="text-body-sm font-bold text-brand">{post.pet.name}</span>
+          <span className="text-caption text-gray-400">{formatDate(post.createdAt)}</span>
         </div>
-
-        {post.description && (
-          <p className="mt-1.5 text-body-sm leading-relaxed text-coolGray-800">
-            {expanded || (post.description?.length ?? 0) <= 60
-              ? post.description
-              : post.description.slice(0, 60) + "..."}
-            {(post.description?.length ?? 0) > 60 && !expanded && (
-              <button type="button" onClick={() => setExpanded(true)} className="ml-1 text-gray-400">
-                더보기
-              </button>
-            )}
-          </p>
-        )}
-
-        <div className="mt-1.5 flex items-center justify-between">
-          <span className="text-caption text-coolGray-600">{formatDate(post.createdAt)}</span>
+        {/* 2행: 닉네임 / 위치 */}
+        <div className="mt-1 flex items-center justify-between">
+          <span className="text-caption text-gray-500">{post.author.nickname}</span>
           {post.location && (
-            <span className="flex items-center gap-1 text-caption text-coolGray-600">
-              <MapPin size={13} strokeWidth={1.5} />
+            <span className="flex items-center gap-0.5 text-caption text-gray-500">
+              <MapPin size={12} strokeWidth={1.5} />
               {post.location}
             </span>
           )}
@@ -286,29 +255,18 @@ function MonthlyRanking({ ranking }: { ranking: ReturnType<typeof useQuery<any>>
             </button>
           </div>
 
-          <div className="bg-white py-3">
+          <div className="bg-white px-3 py-2.5">
+            {/* 1행: 펫이름 / 날짜 */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-body-lg font-semibold text-brand">{item.post.pet.name}</span>
-                <span className="text-body-sm text-coolGray-800">{item.post.author.nickname}</span>
-              </div>
-              {item.rank <= 3 && (
-                <div className="flex items-center gap-1 text-caption text-yellow-600">
-                  <Crown size={12} fill="currentColor" />
-                  <span className="font-medium">{item.rank}위</span>
-                </div>
-              )}
+              <span className="text-body-sm font-bold text-brand">{item.post.pet.name}</span>
+              <span className="text-caption text-gray-400">{formatDate(item.post.createdAt)}</span>
             </div>
-            {item.post.description && (
-              <p className="mt-1.5 text-body-sm leading-relaxed text-coolGray-800">
-                {item.post.description}
-              </p>
-            )}
-            <div className="mt-1.5 flex items-center justify-between">
-              <span className="text-caption text-coolGray-600">{formatDate(item.post.createdAt)}</span>
+            {/* 2행: 닉네임 / 위치 */}
+            <div className="mt-1 flex items-center justify-between">
+              <span className="text-caption text-gray-500">{item.post.author.nickname}</span>
               {item.post.location && (
-                <span className="flex items-center gap-1 text-caption text-coolGray-600">
-                  <MapPin size={13} strokeWidth={1.5} />
+                <span className="flex items-center gap-0.5 text-caption text-gray-500">
+                  <MapPin size={12} strokeWidth={1.5} />
                   {item.post.location}
                 </span>
               )}
