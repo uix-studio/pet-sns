@@ -1,96 +1,336 @@
 /**
- * API client - mock data for now; replace with real fetch to /api/* per architecture.md
+ * API client - Supabase 연동
  */
 
+import { supabase } from "./supabase";
 import type { FeedPost, FeedResponse, RankingItem, SearchParams } from "./types";
 
-/** Feed list - mock; switch to fetch('/api/feed?...') when backend exists */
-export async function fetchFeed(cursor?: string | undefined, limit = 20): Promise<FeedResponse> {
-  return getMockFeed(cursor, limit);
+/** Feed list with pagination */
+export async function fetchFeed(cursor?: string, limit = 20): Promise<FeedResponse> {
+  const offset = cursor ? parseInt(cursor, 10) : 0;
+
+  const { data: posts, error } = await supabase
+    .from("posts")
+    .select(`
+      id,
+      description,
+      location,
+      view_count,
+      like_count,
+      created_at,
+      author:profiles!posts_author_id_fkey (
+        id,
+        nickname,
+        profile_image_url,
+        level
+      ),
+      pet:pets!posts_pet_id_fkey (
+        name,
+        breed_name,
+        age
+      ),
+      images:post_images (
+        url,
+        thumbnail_url
+      )
+    `)
+    .eq("status", "published")
+    .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (error) {
+    console.error("fetchFeed error:", error);
+    return { data: [], hasMore: false };
+  }
+
+  const feedPosts: FeedPost[] = (posts || []).map((post: any) => ({
+    id: post.id,
+    author: {
+      id: post.author?.id || "",
+      nickname: post.author?.nickname || "익명",
+      profile_image_url: post.author?.profile_image_url,
+      level: post.author?.level || 1,
+    },
+    images: (post.images || []).map((img: any) => ({
+      url: img.url,
+      thumbnailUrl: img.thumbnail_url,
+    })),
+    pet: {
+      name: post.pet?.name || "반려동물",
+      breed: post.pet?.breed_name || "",
+      age: post.pet?.age,
+    },
+    description: post.description || "",
+    location: post.location,
+    createdAt: post.created_at,
+    stats: {
+      views: post.view_count || 0,
+      likes: post.like_count || 0,
+    },
+  }));
+
+  const nextOffset = offset + feedPosts.length;
+  const hasMore = feedPosts.length === limit;
+
+  return {
+    data: feedPosts,
+    nextCursor: String(nextOffset),
+    hasMore,
+  };
 }
 
 /** Feed detail */
 export async function fetchFeedDetail(id: string): Promise<FeedPost | null> {
-  const list = getMockFeed().data;
-  return list.find((p) => p.id === id) ?? null;
+  const { data: post, error } = await supabase
+    .from("posts")
+    .select(`
+      id,
+      description,
+      location,
+      view_count,
+      like_count,
+      created_at,
+      author:profiles!posts_author_id_fkey (
+        id,
+        nickname,
+        profile_image_url,
+        level
+      ),
+      pet:pets!posts_pet_id_fkey (
+        name,
+        breed_name,
+        age
+      ),
+      images:post_images (
+        url,
+        thumbnail_url
+      )
+    `)
+    .eq("id", id)
+    .single();
+
+  if (error || !post) {
+    console.error("fetchFeedDetail error:", error);
+    return null;
+  }
+
+  const p = post as any;
+  return {
+    id: p.id,
+    author: {
+      id: p.author?.id || "",
+      nickname: p.author?.nickname || "익명",
+      profile_image_url: p.author?.profile_image_url,
+      level: p.author?.level || 1,
+    },
+    images: (p.images || []).map((img: any) => ({
+      url: img.url,
+      thumbnailUrl: img.thumbnail_url,
+    })),
+    pet: {
+      name: p.pet?.name || "반려동물",
+      breed: p.pet?.breed_name || "",
+      age: p.pet?.age,
+    },
+    description: p.description || "",
+    location: p.location,
+    createdAt: p.created_at,
+    stats: {
+      views: p.view_count || 0,
+      likes: p.like_count || 0,
+    },
+  };
 }
 
-/** Monthly ranking */
+/** Monthly ranking - top posts by like_count */
 export async function fetchRankingMonthly(): Promise<RankingItem[]> {
-  return getMockRanking();
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  const { data: posts, error } = await supabase
+    .from("posts")
+    .select(`
+      id,
+      description,
+      location,
+      view_count,
+      like_count,
+      created_at,
+      author:profiles!posts_author_id_fkey (
+        id,
+        nickname,
+        profile_image_url,
+        level
+      ),
+      pet:pets!posts_pet_id_fkey (
+        name,
+        breed_name,
+        age
+      ),
+      images:post_images (
+        url,
+        thumbnail_url
+      )
+    `)
+    .eq("status", "published")
+    .gte("created_at", thirtyDaysAgo.toISOString())
+    .order("like_count", { ascending: false })
+    .limit(10);
+
+  if (error) {
+    console.error("fetchRankingMonthly error:", error);
+    return [];
+  }
+
+  return (posts || []).map((post: any, index: number) => ({
+    rank: index + 1,
+    post: {
+      id: post.id,
+      author: {
+        id: post.author?.id || "",
+        nickname: post.author?.nickname || "익명",
+        profile_image_url: post.author?.profile_image_url,
+        level: post.author?.level || 1,
+      },
+      images: (post.images || []).map((img: any) => ({
+        url: img.url,
+        thumbnailUrl: img.thumbnail_url,
+      })),
+      pet: {
+        name: post.pet?.name || "반려동물",
+        breed: post.pet?.breed_name || "",
+        age: post.pet?.age,
+      },
+      description: post.description || "",
+      location: post.location,
+      createdAt: post.created_at,
+      stats: {
+        views: post.view_count || 0,
+        likes: post.like_count || 0,
+      },
+    },
+  }));
 }
 
-/** Search */
+/** Search posts */
 export async function fetchSearch(params: SearchParams): Promise<FeedResponse> {
-  return getMockFeed(params.cursor, params.limit ?? 20);
+  const offset = params.cursor ? parseInt(params.cursor, 10) : 0;
+  const limit = params.limit ?? 20;
+
+  let query = supabase
+    .from("posts")
+    .select(`
+      id,
+      description,
+      location,
+      view_count,
+      like_count,
+      created_at,
+      author:profiles!posts_author_id_fkey (
+        id,
+        nickname,
+        profile_image_url,
+        level
+      ),
+      pet:pets!posts_pet_id_fkey (
+        name,
+        breed_name,
+        age
+      ),
+      images:post_images (
+        url,
+        thumbnail_url
+      )
+    `)
+    .eq("status", "published");
+
+  // 검색어가 있으면 description에서 검색
+  if (params.q) {
+    query = query.ilike("description", `%${params.q}%`);
+  }
+
+  // 정렬
+  if (params.sort === "popular") {
+    query = query.order("like_count", { ascending: false });
+  } else {
+    query = query.order("created_at", { ascending: false });
+  }
+
+  const { data: posts, error } = await query.range(offset, offset + limit - 1);
+
+  if (error) {
+    console.error("fetchSearch error:", error);
+    return { data: [], hasMore: false };
+  }
+
+  const feedPosts: FeedPost[] = (posts || []).map((post: any) => ({
+    id: post.id,
+    author: {
+      id: post.author?.id || "",
+      nickname: post.author?.nickname || "익명",
+      profile_image_url: post.author?.profile_image_url,
+      level: post.author?.level || 1,
+    },
+    images: (post.images || []).map((img: any) => ({
+      url: img.url,
+      thumbnailUrl: img.thumbnail_url,
+    })),
+    pet: {
+      name: post.pet?.name || "반려동물",
+      breed: post.pet?.breed_name || "",
+      age: post.pet?.age,
+    },
+    description: post.description || "",
+    location: post.location,
+    createdAt: post.created_at,
+    stats: {
+      views: post.view_count || 0,
+      likes: post.like_count || 0,
+    },
+  }));
+
+  return {
+    data: feedPosts,
+    nextCursor: String(offset + feedPosts.length),
+    hasMore: feedPosts.length === limit,
+  };
 }
 
-/** Popular tags for search */
+/** Popular tags */
 export async function fetchPopularTags(): Promise<string[]> {
-  return ["강아지", "고양이", "산책", "간식", "골든리트리버", "포메라니안"];
+  const { data, error } = await supabase
+    .from("tags")
+    .select("name")
+    .order("usage_count", { ascending: false })
+    .limit(10);
+
+  if (error) {
+    console.error("fetchPopularTags error:", error);
+    return ["강아지", "고양이", "산책", "간식", "골든리트리버", "포메라니안"];
+  }
+
+  return (data as any[])?.map((t) => t.name) || [];
 }
 
 /** Breeds list */
 export async function fetchBreeds(): Promise<{ id: string; name_ko: string; category: string }[]> {
-  return [
-    { id: "golden_retriever", name_ko: "골든 리트리버", category: "dog" },
-    { id: "pomeranian", name_ko: "포메라니안", category: "dog" },
-    { id: "maltese", name_ko: "말티즈", category: "dog" },
-    { id: "shiba", name_ko: "시바견", category: "dog" },
-    { id: "persian", name_ko: "페르시안", category: "cat" },
-  ];
+  const { data, error } = await supabase
+    .from("breeds")
+    .select("id, name_ko, category")
+    .order("name_ko");
+
+  if (error) {
+    console.error("fetchBreeds error:", error);
+    return [];
+  }
+
+  return (data as any[]) || [];
 }
 
 export type LikedSort = "recent" | "oldest" | "likes";
 
-/** Liked posts (my likes) */
+/** Liked posts */
 export async function fetchLikedPosts(cursor?: string, sort: LikedSort = "recent"): Promise<FeedResponse> {
-  const res = await getMockFeed(cursor, 20);
-  const sorted = [...res.data].sort((a, b) => {
-    if (sort === "oldest")
-      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-    if (sort === "likes")
-      return (b.stats?.likes ?? 0) - (a.stats?.likes ?? 0);
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-  });
-  return { ...res, data: sorted };
-}
-
-// ——— Mock data ———
-
-const MOCK_IMAGES = [
-  "/placeholder-1.png",
-  "/placeholder-2.png",
-  "/placeholder-3.png",
-  "/placeholder-4.png",
-];
-
-function getMockFeed(cursor?: string, limit = 20): FeedResponse {
-  const offset = cursor ? parseInt(cursor, 10) || 0 : 0;
-  const totalMock = 24;
-  const data: FeedPost[] = Array.from({ length: Math.min(limit, totalMock - offset) }, (_, i) => {
-    const idx = offset + i;
-    return {
-      id: `post_${idx + 1}`,
-      author: {
-        id: `user_${idx}`,
-        nickname: idx === 0 ? "냥이언니" : `멍멍이집${idx}`,
-        profile_image_url: MOCK_IMAGES[idx % MOCK_IMAGES.length],
-        level: (idx % 3) + 1,
-      },
-      images: [{ url: MOCK_IMAGES[idx % MOCK_IMAGES.length], thumbnailUrl: MOCK_IMAGES[idx % MOCK_IMAGES.length] }],
-      pet: { name: idx === 0 ? "뚱냥이" : "초코", breed: "골든리트리버", age: "2세" },
-      description: idx === 0 ? "안녕하세요! 혹시 저희 뚱냥이 보셨나요?" : "오늘 산책 다녀왔어요.",
-      location: "서울",
-      createdAt: new Date(Date.now() - idx * 3600000).toISOString(),
-      stats: { views: 100 + idx * 50, likes: 10 + idx * 5 },
-      likedByMe: idx % 2 === 0,
-    };
-  });
-  const nextOffset = offset + data.length;
-  return { data, nextCursor: String(nextOffset), hasMore: nextOffset < totalMock };
-}
-
-function getMockRanking(): RankingItem[] {
-  return getMockFeed().data.slice(0, 6).map((post, i) => ({ rank: i + 1, post }));
+  // TODO: 실제 사용자 인증 연동 후 user_id로 필터링
+  return fetchFeed(cursor, 20);
 }
