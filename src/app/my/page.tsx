@@ -40,6 +40,12 @@ const INITIAL_POSTS: MyPost[] = [
 
 type ContentTab = "사진" | "영상" | "그룹";
 
+const CONTENT_TABS: Array<{ value: ContentTab; label: string }> = [
+  { value: "사진", label: "사진" },
+  { value: "영상", label: "영상" },
+  { value: "그룹", label: "기록" },
+];
+
 export default function MyPage() {
   const [contentTab, setContentTab] = useState<ContentTab>("사진");
   const [posts, setPosts] = useState<MyPost[]>(INITIAL_POSTS);
@@ -240,7 +246,7 @@ export default function MyPage() {
     <MobileLayout hideHeader>
       <div className="p-4">
         {/* Profile header */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <div className="relative">
             <Avatar src={null} alt={petName} size="lg" />
             <button
@@ -267,7 +273,7 @@ export default function MyPage() {
                 />
               </div>
             ) : (
-              <div className="flex items-center gap-1 text-body-lg font-bold text-neutral-black-800">
+              <div className="text-[16px] font-semibold leading-6 text-neutral-black-800">
                 {petName}
               </div>
             )}
@@ -287,7 +293,7 @@ export default function MyPage() {
                 />
               </div>
             ) : (
-              <div className="mt-0.5 flex items-center gap-1 text-caption text-gray-500">
+              <div className="mt-0.5 text-[14px] font-medium leading-[18.2px] text-[#737373]">
                 {nickname}
               </div>
             )}
@@ -369,7 +375,7 @@ export default function MyPage() {
                 </button>
               </>
             ) : (
-              <button type="button" onClick={startEditingProfile} className="rounded-lg border border-gray-200 px-3 py-1.5 text-body-sm text-gray-600 active:bg-gray-50">
+              <button type="button" onClick={startEditingProfile} className="h-[26px] rounded bg-[#f2f2f2] px-2 text-[14px] leading-[18.2px] text-black active:bg-[#eaeaea]">
                 수정
               </button>
             )}
@@ -397,21 +403,21 @@ export default function MyPage() {
 
         {/* Content tabs */}
         <div className="mt-6 flex border-b border-gray-200">
-          {(["사진", "영상", "그룹"] as const).map((tab) => (
+          {CONTENT_TABS.map((tab) => (
             <button
-              key={tab}
+              key={tab.value}
               type="button"
               onClick={() => {
-                setContentTab(tab);
+                setContentTab(tab.value);
                 setViewingGroupId(null);
                 setGroupSelectMode(false);
                 setGroupSelectedIds(new Set());
               }}
               className={`flex-1 pb-2 text-center text-body-sm font-medium transition-colors ${
-                contentTab === tab ? "border-b-2 border-brand text-brand" : "text-gray-500"
+                contentTab === tab.value ? "border-b-2 border-brand text-brand" : "text-gray-500"
               }`}
             >
-              {tab}
+              {tab.label}
             </button>
           ))}
         </div>
@@ -473,7 +479,7 @@ export default function MyPage() {
                 </Link>
               </div>
             ) : (
-              <div className="grid grid-cols-3 gap-0.5" role="list">
+              <div className="grid grid-cols-3 gap-1" role="list">
                 {sortedPosts.map((post) => {
                   const isSelected = selectedIds.has(post.id);
                   const isEditing = editingPostId === post.id;
@@ -504,7 +510,7 @@ export default function MyPage() {
                       )}
 
                       <div
-                        className={`relative aspect-square overflow-hidden rounded-lg bg-gray-100 ${
+                        className={`relative aspect-square overflow-hidden bg-gray-100 ${
                           isSelected ? "ring-2 ring-brand" : ""
                         }`}
                       >
