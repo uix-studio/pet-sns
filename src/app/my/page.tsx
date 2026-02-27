@@ -14,6 +14,7 @@ const BREED_LIST = [
   "꼬숑 (꼬똥드툴레아+비숑)", "말티푸 (말티즈+푸들)", "폼스키 (포메라니안+허스키)",
   "코카푸 (코커스패니얼+푸들)", "골든두들 (골든리트리버+푸들)",
 ];
+const SORTED_BREEDS = [...BREED_LIST].sort((a, b) => a.localeCompare(b, "ko"));
 
 interface MyPost {
   id: string;
@@ -48,29 +49,29 @@ export default function MyPage() {
 
   const [nickname, setNickname] = useState("송맘");
   const [petName, setPetName] = useState("송이");
-  const [isEditingNickname, setIsEditingNickname] = useState(false);
+  const [isProfileEditing, setIsProfileEditing] = useState(false);
   const [nicknameInput, setNicknameInput] = useState(nickname);
   const nicknameRef = useRef<HTMLInputElement>(null);
 
-  const [isEditingPetName, setIsEditingPetName] = useState(false);
   const [petNameInput, setPetNameInput] = useState(petName);
-  const petNameRef = useRef<HTMLInputElement>(null);
 
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
 
   const [petBreed, setPetBreed] = useState("");
   const [isEditingBreed, setIsEditingBreed] = useState(false);
   const [breedInput, setBreedInput] = useState("");
+  const [breedSearchInput, setBreedSearchInput] = useState("");
   const [showBreedDropdown, setShowBreedDropdown] = useState(false);
   const [isCustomBreed, setIsCustomBreed] = useState(false);
   const breedRef = useRef<HTMLInputElement>(null);
 
-  const filteredBreeds = breedInput.trim()
-    ? BREED_LIST.filter((b) => b.includes(breedInput.trim()))
-    : BREED_LIST;
+  const filteredBreeds = breedSearchInput.trim()
+    ? SORTED_BREEDS.filter((b) => b.includes(breedSearchInput.trim()))
+    : SORTED_BREEDS;
 
   const startEditingBreed = () => {
     setBreedInput(petBreed);
+    setBreedSearchInput("");
     setIsEditingBreed(true);
     setIsCustomBreed(false);
     setShowBreedDropdown(true);
@@ -94,6 +95,7 @@ export default function MyPage() {
 
   const cancelBreed = () => {
     setBreedInput(petBreed);
+    setBreedSearchInput("");
     setIsEditingBreed(false);
     setShowBreedDropdown(false);
     setIsCustomBreed(false);
@@ -189,38 +191,25 @@ export default function MyPage() {
     setPosts((prev) => prev.filter((p) => p.id !== id));
   };
 
-  const startEditingNickname = () => {
+  const startEditingProfile = () => {
     setNicknameInput(nickname);
-    setIsEditingNickname(true);
+    setPetNameInput(petName);
+    setIsProfileEditing(true);
     setTimeout(() => nicknameRef.current?.focus(), 0);
   };
 
-  const saveNickname = () => {
-    const trimmed = nicknameInput.trim();
-    if (trimmed) setNickname(trimmed);
-    setIsEditingNickname(false);
+  const saveProfile = () => {
+    const nextNickname = nicknameInput.trim();
+    const nextPetName = petNameInput.trim();
+    if (nextNickname) setNickname(nextNickname);
+    if (nextPetName) setPetName(nextPetName);
+    setIsProfileEditing(false);
   };
 
-  const cancelNickname = () => {
+  const cancelProfile = () => {
     setNicknameInput(nickname);
-    setIsEditingNickname(false);
-  };
-
-  const startEditingPetName = () => {
     setPetNameInput(petName);
-    setIsEditingPetName(true);
-    setTimeout(() => petNameRef.current?.focus(), 0);
-  };
-
-  const savePetName = () => {
-    const trimmed = petNameInput.trim();
-    if (trimmed) setPetName(trimmed);
-    setIsEditingPetName(false);
-  };
-
-  const cancelPetName = () => {
-    setPetNameInput(petName);
-    setIsEditingPetName(false);
+    setIsProfileEditing(false);
   };
 
   const sortedPosts = sortOrder === "oldest" ? [...posts].reverse() : posts;
@@ -264,108 +253,72 @@ export default function MyPage() {
           </div>
 
           <div className="flex-1">
-            {isEditingPetName ? (
+            {isProfileEditing ? (
               <div className="flex items-center gap-1.5">
                 <input
-                  ref={petNameRef}
                   value={petNameInput}
                   onChange={(e) => setPetNameInput(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") savePetName();
-                    if (e.key === "Escape") cancelPetName();
+                    if (e.key === "Enter") saveProfile();
+                    if (e.key === "Escape") cancelProfile();
                   }}
                   className="w-28 rounded border border-brand px-1.5 py-0.5 text-body-lg font-bold text-neutral-black-800 outline-none focus:ring-1 focus:ring-brand"
                   maxLength={12}
                 />
-                <button
-                  type="button"
-                  onClick={savePetName}
-                  className="flex h-5 w-5 items-center justify-center rounded-full bg-brand text-white"
-                  aria-label="이름 저장"
-                >
-                  <Check size={12} strokeWidth={2.5} />
-                </button>
-                <button
-                  type="button"
-                  onClick={cancelPetName}
-                  className="flex h-5 w-5 items-center justify-center rounded-full bg-gray-200 text-gray-500"
-                  aria-label="이름 편집 취소"
-                >
-                  <X size={12} strokeWidth={2.5} />
-                </button>
               </div>
             ) : (
-              <button
-                type="button"
-                onClick={startEditingPetName}
-                className="flex items-center gap-1 text-body-lg font-bold text-neutral-black-800 transition-colors active:text-brand"
-              >
+              <div className="flex items-center gap-1 text-body-lg font-bold text-neutral-black-800">
                 {petName}
-                <Pencil size={12} strokeWidth={1.5} className="text-gray-400" />
-              </button>
+              </div>
             )}
 
-            {isEditingNickname ? (
+            {isProfileEditing ? (
               <div className="mt-0.5 flex items-center gap-1.5">
                 <input
                   ref={nicknameRef}
                   value={nicknameInput}
                   onChange={(e) => setNicknameInput(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") saveNickname();
-                    if (e.key === "Escape") cancelNickname();
+                    if (e.key === "Enter") saveProfile();
+                    if (e.key === "Escape") cancelProfile();
                   }}
                   className="w-24 rounded border border-brand px-1.5 py-0.5 text-caption text-gray-700 outline-none focus:ring-1 focus:ring-brand"
                   maxLength={12}
                 />
-                <button
-                  type="button"
-                  onClick={saveNickname}
-                  className="flex h-5 w-5 items-center justify-center rounded-full bg-brand text-white"
-                  aria-label="닉네임 저장"
-                >
-                  <Check size={12} strokeWidth={2.5} />
-                </button>
-                <button
-                  type="button"
-                  onClick={cancelNickname}
-                  className="flex h-5 w-5 items-center justify-center rounded-full bg-gray-200 text-gray-500"
-                  aria-label="닉네임 편집 취소"
-                >
-                  <X size={12} strokeWidth={2.5} />
-                </button>
               </div>
             ) : (
-              <button
-                type="button"
-                onClick={startEditingNickname}
-                className="mt-0.5 flex items-center gap-1 text-caption text-gray-500 transition-colors active:text-brand"
-              >
+              <div className="mt-0.5 flex items-center gap-1 text-caption text-gray-500">
                 {nickname}
-                <Pencil size={11} strokeWidth={1.5} />
-              </button>
+              </div>
             )}
 
-            {/* 동물 종류 */}
+            {/* 견종 */}
             {isEditingBreed ? (
               <div className="relative mt-1">
                 <div className="flex items-center gap-1.5">
-                  <input
-                    ref={breedRef}
-                    value={breedInput}
-                    onChange={(e) => {
-                      setBreedInput(e.target.value);
-                      setShowBreedDropdown(true);
-                      setIsCustomBreed(false);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") saveBreed();
-                      if (e.key === "Escape") cancelBreed();
-                    }}
-                    placeholder="종류 검색 또는 직접 입력"
-                    className="w-36 rounded border border-brand px-1.5 py-0.5 text-caption text-gray-700 outline-none focus:ring-1 focus:ring-brand"
-                    maxLength={20}
-                  />
+                  {isCustomBreed ? (
+                    <input
+                      ref={breedRef}
+                      value={breedInput}
+                      onChange={(e) => setBreedInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") saveBreed();
+                        if (e.key === "Escape") cancelBreed();
+                      }}
+                      placeholder="견종 직접 입력"
+                      className="w-36 rounded border border-brand px-1.5 py-0.5 text-caption text-gray-700 outline-none focus:ring-1 focus:ring-brand"
+                      maxLength={20}
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setShowBreedDropdown((prev) => !prev)}
+                      className="flex w-36 items-center justify-between rounded border border-brand px-2 py-0.5 text-caption text-gray-700"
+                    >
+                      <span className="truncate">{breedInput || "견종 선택"}</span>
+                      <ChevronDown size={12} strokeWidth={1.5} />
+                    </button>
+                  )}
                   <button type="button" onClick={saveBreed} className="flex h-5 w-5 items-center justify-center rounded-full bg-brand text-white" aria-label="종류 저장">
                     <Check size={12} strokeWidth={2.5} />
                   </button>
@@ -373,39 +326,57 @@ export default function MyPage() {
                     <X size={12} strokeWidth={2.5} />
                   </button>
                 </div>
-                {showBreedDropdown && filteredBreeds.length > 0 && (
+                {showBreedDropdown && (
                   <div className="absolute left-0 top-full z-20 mt-1 max-h-40 w-52 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
-                    {filteredBreeds.map((b) => (
-                      <button key={b} type="button" onClick={() => selectBreed(b)} className="block w-full px-3 py-2 text-left text-caption text-gray-700 hover:bg-gray-50 active:bg-gray-100">
-                        {b}
-                      </button>
-                    ))}
-                    {breedInput.trim() && !BREED_LIST.includes(breedInput.trim()) && (
+                    <div className="border-b border-gray-100 p-2">
+                      <input
+                        value={breedSearchInput}
+                        onChange={(e) => setBreedSearchInput(e.target.value)}
+                        placeholder="견종 검색"
+                        className="w-full rounded border border-gray-200 px-2 py-1 text-caption text-gray-700 outline-none focus:border-brand"
+                      />
+                    </div>
+                    {filteredBreeds.length > 0 ? (
+                      filteredBreeds.map((b) => (
+                        <button key={b} type="button" onClick={() => selectBreed(b)} className="block w-full px-3 py-2 text-left text-caption text-gray-700 hover:bg-gray-50 active:bg-gray-100">
+                          {b}
+                        </button>
+                      ))
+                    ) : (
                       <button type="button" onClick={() => { setIsCustomBreed(true); setShowBreedDropdown(false); }} className="block w-full border-t border-gray-100 px-3 py-2 text-left text-caption font-medium text-brand">
-                        &quot;{breedInput.trim()}&quot; 직접 입력
+                        직접입력
                       </button>
                     )}
                   </div>
                 )}
               </div>
             ) : (
-              <button
-                type="button"
-                onClick={startEditingBreed}
-                className="mt-1 flex items-center gap-1 text-caption text-gray-400 transition-colors active:text-brand"
-              >
-                {petBreed || "동물 종류 등록"}
+              <button type="button" onClick={startEditingBreed} className="mt-1 flex items-center gap-1 text-caption text-gray-400 transition-colors active:text-brand">
+                {petBreed || "견종 등록"}
                 {petBreed ? <Pencil size={10} strokeWidth={1.5} /> : <ChevronDown size={12} strokeWidth={1.5} />}
               </button>
             )}
           </div>
 
-          <Link
-            href="/my/settings"
-            className="rounded-lg border border-gray-200 px-3 py-1.5 text-body-sm text-gray-600 active:bg-gray-50"
-          >
-            계정
-          </Link>
+          <div className="flex items-center gap-2">
+            {isProfileEditing ? (
+              <>
+                <button type="button" onClick={saveProfile} className="rounded-lg bg-brand px-3 py-1.5 text-body-sm text-white active:bg-brand/90">
+                  저장
+                </button>
+                <button type="button" onClick={cancelProfile} className="rounded-lg border border-gray-200 px-3 py-1.5 text-body-sm text-gray-600 active:bg-gray-50">
+                  취소
+                </button>
+              </>
+            ) : (
+              <button type="button" onClick={startEditingProfile} className="rounded-lg border border-gray-200 px-3 py-1.5 text-body-sm text-gray-600 active:bg-gray-50">
+                수정
+              </button>
+            )}
+            <Link href="/my/settings" className="rounded-lg border border-gray-200 px-3 py-1.5 text-body-sm text-gray-600 active:bg-gray-50">
+              계정
+            </Link>
+          </div>
         </div>
 
         {/* Stats row */}
