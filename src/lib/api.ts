@@ -124,6 +124,27 @@ function getFallbackFeedPosts(): FeedPost[] {
         likes: 0,
       },
     },
+    {
+      id: "fallback-4",
+      author: {
+        id: "fallback-author-4",
+        nickname: "룽지맘",
+        profile_image_url: undefined,
+        level: 1,
+      },
+      images: [{ url: "/placeholder-image4.png" }],
+      pet: {
+        name: "누룽지",
+        breed: "믹스",
+      },
+      description: "오늘 올라온 사진",
+      location: "제주도",
+      createdAt: figmaDate,
+      stats: {
+        views: 0,
+        likes: 0,
+      },
+    },
   ];
 }
 
