@@ -233,14 +233,14 @@ function FeedCard({
         </button>
       </div>
 
-      <div className="bg-white px-3 py-2.5">
+      <div className="flex h-[46px] flex-col justify-center bg-white px-3 py-0">
         {/* 1행: 펫이름 / 날짜 */}
         <div className="flex items-center justify-between">
           <span className="text-[18px] font-semibold leading-[23.4px] text-brand">{post.pet.name}</span>
           <span className="text-[14px] leading-[18.2px] text-[#3d4854]">{formatDate(post.createdAt)}</span>
         </div>
         {/* 2행: 닉네임 / 위치 */}
-        <div className="mt-1 flex items-center justify-between">
+        <div className="flex items-center justify-between">
           <span className="text-[14px] leading-[18.2px] text-[#3d4854]">{post.author.nickname}</span>
           {post.location && (
             <span className="flex items-center gap-0.5 text-[12px] leading-6 tracking-[0.5px] text-black">
@@ -303,14 +303,14 @@ function MonthlyRanking({ ranking }: { ranking: ReturnType<typeof useQuery<any>>
             </button>
           </div>
 
-          <div className="bg-white px-3 py-2.5">
+          <div className="flex h-[46px] flex-col justify-center bg-white px-3 py-0">
             {/* 1행: 펫이름 / 날짜 */}
             <div className="flex items-center justify-between">
               <span className="text-[18px] font-semibold leading-[23.4px] text-brand">{item.post.pet.name}</span>
               <span className="text-[14px] leading-[18.2px] text-[#3d4854]">{formatDate(item.post.createdAt)}</span>
             </div>
             {/* 2행: 닉네임 / 위치 */}
-            <div className="mt-1 flex items-center justify-between">
+            <div className="flex items-center justify-between">
               <span className="text-[14px] leading-[18.2px] text-[#3d4854]">{item.post.author.nickname}</span>
               {item.post.location && (
                 <span className="flex items-center gap-0.5 text-[12px] leading-6 tracking-[0.5px] text-black">
