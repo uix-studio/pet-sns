@@ -58,6 +58,75 @@ function readLegacyLocalFeedPosts(): FeedPost[] {
   }
 }
 
+function getFallbackFeedPosts(): FeedPost[] {
+  const now = new Date().toISOString();
+  return [
+    {
+      id: "fallback-1",
+      author: {
+        id: "fallback-author-1",
+        nickname: "룽지맘",
+        profile_image_url: undefined,
+        level: 1,
+      },
+      images: [{ url: "/deco-smile-1.svg" }],
+      pet: {
+        name: "누룽지",
+        breed: "믹스",
+      },
+      description: "오늘은 제주도에서 신나게 뛰어놀았어요.",
+      location: "제주도",
+      createdAt: now,
+      stats: {
+        views: 0,
+        likes: 0,
+      },
+    },
+    {
+      id: "fallback-2",
+      author: {
+        id: "fallback-author-2",
+        nickname: "숑맘",
+        profile_image_url: undefined,
+        level: 1,
+      },
+      images: [{ url: "/deco-smile-2.svg" }],
+      pet: {
+        name: "숑이",
+        breed: "말티즈",
+      },
+      description: "산책 후 간식 타임!",
+      location: "서울",
+      createdAt: now,
+      stats: {
+        views: 0,
+        likes: 0,
+      },
+    },
+    {
+      id: "fallback-3",
+      author: {
+        id: "fallback-author-3",
+        nickname: "냥집사",
+        profile_image_url: undefined,
+        level: 1,
+      },
+      images: [{ url: "/deco-cat-peek.svg" }],
+      pet: {
+        name: "코코",
+        breed: "코리안 숏헤어",
+      },
+      description: "창문 밖 구경하는 코코.",
+      location: "부산",
+      createdAt: now,
+      stats: {
+        views: 0,
+        likes: 0,
+      },
+    },
+  ];
+}
+
 /** Feed list with pagination */
 export async function fetchFeed(cursor?: string, limit = 20): Promise<FeedResponse> {
   const offset = cursor ? parseInt(cursor, 10) : 0;
@@ -125,9 +194,13 @@ export async function fetchFeed(cursor?: string, limit = 20): Promise<FeedRespon
   const nextOffset = offset + feedPosts.length;
   const hasMore = feedPosts.length === limit;
   const legacyLocalPosts = offset === 0 ? readLegacyLocalFeedPosts() : [];
+  const fallbackPosts =
+    offset === 0 && feedPosts.length === 0 && legacyLocalPosts.length === 0
+      ? getFallbackFeedPosts()
+      : [];
 
   return {
-    data: offset === 0 ? [...legacyLocalPosts, ...feedPosts] : feedPosts,
+    data: offset === 0 ? [...legacyLocalPosts, ...feedPosts, ...fallbackPosts] : feedPosts,
     nextCursor: String(nextOffset),
     hasMore,
   };
