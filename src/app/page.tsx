@@ -233,7 +233,7 @@ function FeedCard({
         </button>
       </div>
 
-      <div className="flex h-[46px] flex-col justify-center bg-white px-3 py-0">
+      <div className="bg-white px-3 py-4">
         {/* 1행: 펫이름 / 날짜 */}
         <div className="flex items-center justify-between">
           <span className="text-[18px] font-semibold leading-[23.4px] text-brand">{post.pet.name}</span>
@@ -288,65 +288,47 @@ function MonthlyRanking({ ranking }: { ranking: ReturnType<typeof useQuery<any>>
       {items.length > 0 && (
         <>
           <div className="overflow-x-auto overscroll-x-contain px-4 pb-3 pt-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-            <div className="flex w-max snap-x snap-mandatory gap-2">
-              {items.slice(0, 3).map((item: any, idx: number) => {
-                const featured = idx === 0;
-                return (
-                  <article
-                    key={`top-${item.post.id}`}
-                    className={`shrink-0 snap-start overflow-hidden bg-white ${featured ? "w-[324px]" : "w-[270px]"}`}
-                  >
-                    <div className={`relative w-full bg-gray-100 ${featured ? "h-[360px]" : "h-[300px]"}`}>
-                      <SafeFeedImage
-                        images={item.post.images}
-                        alt={`${item.rank}위 ${item.post.pet.name}`}
-                        sizes={featured ? "(max-width: 360px) 90vw, 324px" : "(max-width: 360px) 75vw, 270px"}
-                        showDots
+            <div className="flex w-max snap-x snap-mandatory gap-2 pr-8">
+              {items.slice(0, 3).map((item: any) => (
+                <article key={`top-${item.post.id}`} className="w-[302px] shrink-0 snap-start overflow-hidden bg-white">
+                  <div className="relative h-[300px] w-full bg-gray-100">
+                    <SafeFeedImage
+                      images={item.post.images}
+                      alt={`${item.rank}위 ${item.post.pet.name}`}
+                      sizes="(max-width: 360px) 84vw, 302px"
+                      showDots
+                    />
+                    <div className="absolute left-4 top-4 flex h-[33px] min-w-[33px] items-center justify-center rounded-full bg-[#656565]/85 px-2 text-[13px] font-semibold leading-none text-white shadow-sm">
+                      {rankLabel(item.rank)}
+                    </div>
+                    <button
+                      type="button"
+                      className="absolute right-4 top-4 text-white drop-shadow-md transition-transform active:scale-110"
+                      aria-label={isLiked(item.post.id) ? "좋아요 취소" : "좋아요"}
+                      onClick={() => toggle(item.post.id)}
+                    >
+                      <Heart
+                        size={21}
+                        fill={isLiked(item.post.id) ? "currentColor" : "none"}
+                        strokeWidth={1.8}
+                        className={isLiked(item.post.id) ? "text-brand" : ""}
                       />
-                      {featured ? (
-                        <div className="absolute left-4 top-4 flex h-[33px] w-[33px] items-center justify-center rounded-full bg-[#656565]/85 text-[13px] font-semibold leading-none text-white shadow-sm">
-                          {rankLabel(item.rank)}
-                        </div>
-                      ) : (
-                        <div className="absolute left-3 top-3 flex h-7 min-w-7 items-center justify-center rounded-full bg-black/50 px-1.5 text-[11px] font-semibold leading-none text-white">
-                          {rankLabel(item.rank)}
-                        </div>
-                      )}
-                      <button
-                        type="button"
-                        className={`absolute text-white drop-shadow-md transition-transform active:scale-110 ${
-                          featured ? "right-4 top-4" : "right-3 top-3"
-                        }`}
-                        aria-label={isLiked(item.post.id) ? "좋아요 취소" : "좋아요"}
-                        onClick={() => toggle(item.post.id)}
-                      >
-                        <Heart
-                          size={featured ? 22 : 18}
-                          fill={isLiked(item.post.id) ? "currentColor" : "none"}
-                          strokeWidth={1.8}
-                          className={isLiked(item.post.id) ? "text-brand" : ""}
-                        />
-                      </button>
+                    </button>
+                  </div>
+                  <div className="bg-white px-3 py-[6px]">
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center gap-1 text-[18px] font-semibold leading-[23px] text-brand">
+                        {item.rank === 1 && <Crown size={16} className="text-brand" fill="currentColor" />}
+                        {item.post.pet.name}
+                      </span>
+                      <span className="text-[14px] leading-[18px] text-[#3d4854]">{formatDate(item.post.createdAt)}</span>
                     </div>
-                    <div className={`bg-white px-3 ${featured ? "h-[43px] py-[2px]" : "h-[35px] py-[2px]"}`}>
-                      <div className="flex items-center justify-between">
-                        <span className={`flex items-center gap-1 font-semibold text-brand ${featured ? "text-[18px] leading-[23px]" : "text-[14px] leading-[18px]"}`}>
-                          {featured && <Crown size={16} className="text-brand" fill="currentColor" />}
-                          {item.post.pet.name}
-                        </span>
-                        <span className={`${featured ? "text-[14px] leading-[18px]" : "text-[12px] leading-[16px]"} text-[#3d4854]`}>
-                          {formatDate(item.post.createdAt)}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className={`${featured ? "text-[14px] leading-[18px]" : "text-[12px] leading-[16px]"} text-[#3d4854]`}>
-                          {item.post.author.nickname}
-                        </span>
-                      </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[14px] leading-[18px] text-[#3d4854]">{item.post.author.nickname}</span>
                     </div>
-                  </article>
-                );
-              })}
+                  </div>
+                </article>
+              ))}
             </div>
           </div>
 
