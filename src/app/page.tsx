@@ -257,13 +257,25 @@ function FeedCard({
 function MonthlyRanking({ ranking }: { ranking: ReturnType<typeof useQuery<any>> }) {
   const { data, isLoading, error } = ranking;
   const { isLiked, toggle } = useLikes();
+  const items = data ?? [];
+
+  const rankLabel = (rank: number) => {
+    if (rank === 1) return "1st";
+    if (rank === 2) return "2nd";
+    if (rank === 3) return "3rd";
+    return `${rank}th`;
+  };
 
   return (
-    <div className="space-y-3 bg-white pb-3">
+    <div className="bg-[#fafafa] pb-4">
       {isLoading && (
-        <div className="space-y-3 p-4">
-          <div className="aspect-[4/3] animate-pulse rounded-xl bg-gray-100" />
-          <div className="aspect-[4/3] animate-pulse rounded-xl bg-gray-100" />
+        <div className="space-y-2 p-4">
+          <div className="h-[360px] animate-pulse bg-gray-100" />
+          <div className="grid grid-cols-2 gap-2">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-[191px] animate-pulse bg-gray-100" />
+            ))}
+          </div>
         </div>
       )}
 
@@ -273,55 +285,103 @@ function MonthlyRanking({ ranking }: { ranking: ReturnType<typeof useQuery<any>>
         </p>
       )}
 
-      {data?.map((item: any) => (
-        <article key={item.post.id} className="overflow-hidden bg-white">
-          <div className="relative aspect-[9/10] w-full bg-gray-100">
-            <SafeFeedImage
-              images={item.post.images}
-              alt={`${item.rank}위 ${item.post.pet.name}`}
-              sizes="(max-width: 360px) 100vw, 360px"
-              showDots={false}
-            />
-            {item.rank <= 3 && (
-              <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-black/50 px-2.5 py-1 backdrop-blur-sm">
-                <Crown size={14} className="text-yellow-400" fill="currentColor" />
-                <span className="text-[11px] font-bold text-white">{item.rank}위</span>
-              </div>
-            )}
-            <button
-              type="button"
-              className="absolute right-3 top-4 text-white drop-shadow-md transition-transform active:scale-110"
-              aria-label={isLiked(item.post.id) ? "좋아요 취소" : "좋아요"}
-              onClick={() => toggle(item.post.id)}
-            >
-              <Heart
-                size={24}
-                fill={isLiked(item.post.id) ? "currentColor" : "none"}
-                strokeWidth={1.8}
-                className={isLiked(item.post.id) ? "text-brand" : ""}
-              />
-            </button>
+      {items.length > 0 && (
+        <>
+          <div className="overflow-x-auto px-4 pb-3 pt-2">
+            <div className="flex w-max gap-2">
+              {items.slice(0, 3).map((item: any, idx: number) => {
+                const featured = idx === 0;
+                return (
+                  <article
+                    key={`top-${item.post.id}`}
+                    className={`shrink-0 overflow-hidden bg-white ${featured ? "w-[324px]" : "w-[270px]"}`}
+                  >
+                    <div className={`relative w-full bg-gray-100 ${featured ? "h-[360px]" : "h-[300px]"}`}>
+                      <SafeFeedImage
+                        images={item.post.images}
+                        alt={`${item.rank}위 ${item.post.pet.name}`}
+                        sizes={featured ? "(max-width: 360px) 90vw, 324px" : "(max-width: 360px) 75vw, 270px"}
+                        showDots
+                      />
+                      <div className="absolute left-3 top-3 flex items-center rounded-full bg-black/50 px-2 py-1 text-[12px] leading-none text-white">
+                        {rankLabel(item.rank)}
+                      </div>
+                      <button
+                        type="button"
+                        className={`absolute text-white drop-shadow-md transition-transform active:scale-110 ${
+                          featured ? "right-4 top-4" : "right-3 top-3"
+                        }`}
+                        aria-label={isLiked(item.post.id) ? "좋아요 취소" : "좋아요"}
+                        onClick={() => toggle(item.post.id)}
+                      >
+                        <Heart
+                          size={featured ? 22 : 18}
+                          fill={isLiked(item.post.id) ? "currentColor" : "none"}
+                          strokeWidth={1.8}
+                          className={isLiked(item.post.id) ? "text-brand" : ""}
+                        />
+                      </button>
+                    </div>
+                    <div className={`bg-white px-3 ${featured ? "h-[43px] py-[2px]" : "h-[35px] py-[2px]"}`}>
+                      <div className="flex items-center justify-between">
+                        <span className={`flex items-center gap-1 font-semibold text-brand ${featured ? "text-[18px] leading-[23px]" : "text-[14px] leading-[18px]"}`}>
+                          {item.rank <= 3 && <Crown size={featured ? 16 : 12} className="text-brand" fill="currentColor" />}
+                          {item.post.pet.name}
+                        </span>
+                        <span className={`${featured ? "text-[14px] leading-[18px]" : "text-[12px] leading-[16px]"} text-[#3d4854]`}>
+                          {formatDate(item.post.createdAt)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className={`${featured ? "text-[14px] leading-[18px]" : "text-[12px] leading-[16px]"} text-[#3d4854]`}>
+                          {item.post.author.nickname}
+                        </span>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
           </div>
 
-          <div className="flex h-[46px] flex-col justify-center bg-white px-3 py-0">
-            {/* 1행: 펫이름 / 날짜 */}
-            <div className="flex items-center justify-between">
-              <span className="text-[18px] font-semibold leading-[23.4px] text-brand">{item.post.pet.name}</span>
-              <span className="text-[14px] leading-[18.2px] text-[#3d4854]">{formatDate(item.post.createdAt)}</span>
-            </div>
-            {/* 2행: 닉네임 / 위치 */}
-            <div className="flex items-center justify-between">
-              <span className="text-[14px] leading-[18.2px] text-[#3d4854]">{item.post.author.nickname}</span>
-              {item.post.location && (
-                <span className="flex items-center gap-0.5 text-[12px] leading-6 tracking-[0.5px] text-black">
-                  <MapPin size={12} strokeWidth={1.5} />
-                  {item.post.location}
-                </span>
-              )}
-            </div>
+          <div className="grid grid-cols-2 gap-[10px] px-4">
+            {items.slice(3).map((item: any) => (
+              <article key={item.post.id} className="overflow-hidden bg-white">
+                <div className="relative h-[191px] w-full bg-gray-100">
+                  <SafeFeedImage
+                    images={item.post.images}
+                    alt={`${item.rank}위 ${item.post.pet.name}`}
+                    sizes="(max-width: 360px) 44vw, 159px"
+                    showDots
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-2.5 top-2.5 text-white drop-shadow-md transition-transform active:scale-110"
+                    aria-label={isLiked(item.post.id) ? "좋아요 취소" : "좋아요"}
+                    onClick={() => toggle(item.post.id)}
+                  >
+                    <Heart
+                      size={18}
+                      fill={isLiked(item.post.id) ? "currentColor" : "none"}
+                      strokeWidth={1.8}
+                      className={isLiked(item.post.id) ? "text-brand" : ""}
+                    />
+                  </button>
+                </div>
+                <div className="h-[48px] bg-white px-1.5 py-1">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-[16px] font-semibold leading-[20px] text-brand">{item.post.pet.name}</p>
+                      <p className="text-[12px] leading-[16px] text-[#3d4854]">{item.post.author.nickname}</p>
+                    </div>
+                    <p className="text-[12px] leading-[16px] text-[#3d4854]">{formatDate(item.post.createdAt)}</p>
+                  </div>
+                </div>
+              </article>
+            ))}
           </div>
-        </article>
-      ))}
+        </>
+      )}
     </div>
   );
 }
