@@ -148,6 +148,19 @@ function getFallbackFeedPosts(): FeedPost[] {
   ];
 }
 
+function getFallbackMonthlyRanking(): RankingItem[] {
+  return getFallbackFeedPosts().map((post, index) => ({
+    rank: index + 1,
+    post: {
+      ...post,
+      stats: {
+        views: post.stats?.views ?? 0,
+        likes: 100 - index * 7,
+      },
+    },
+  }));
+}
+
 /** Feed list with pagination */
 export async function fetchFeed(cursor?: string, limit = 20): Promise<FeedResponse> {
   const offset = cursor ? parseInt(cursor, 10) : 0;
@@ -422,10 +435,10 @@ export async function fetchRankingMonthly(): Promise<RankingItem[]> {
 
   if (error) {
     console.error("fetchRankingMonthly error:", error);
-    return [];
+    return getFallbackMonthlyRanking();
   }
 
-  return (posts || []).map((post: any, index: number) => ({
+  const rankingItems = (posts || []).map((post: any, index: number) => ({
     rank: index + 1,
     post: {
       id: post.id,
@@ -453,6 +466,12 @@ export async function fetchRankingMonthly(): Promise<RankingItem[]> {
       },
     },
   }));
+
+  if (rankingItems.length === 0) {
+    return getFallbackMonthlyRanking();
+  }
+
+  return rankingItems;
 }
 
 /** Search posts */
