@@ -190,17 +190,20 @@ export async function fetchFeed(cursor?: string, limit = 20): Promise<FeedRespon
       likes: post.like_count || 0,
     },
   }));
+  const imageValidPosts = feedPosts.filter((post) =>
+    (post.images || []).some((img) => typeof img?.url === "string" && img.url.trim().length > 0)
+  );
 
-  const nextOffset = offset + feedPosts.length;
-  const hasMore = feedPosts.length === limit;
+  const nextOffset = offset + imageValidPosts.length;
+  const hasMore = imageValidPosts.length === limit;
   const legacyLocalPosts = offset === 0 ? readLegacyLocalFeedPosts() : [];
   const fallbackPosts =
-    offset === 0 && feedPosts.length === 0 && legacyLocalPosts.length === 0
+    offset === 0 && imageValidPosts.length === 0 && legacyLocalPosts.length === 0
       ? getFallbackFeedPosts()
       : [];
 
   return {
-    data: offset === 0 ? [...legacyLocalPosts, ...feedPosts, ...fallbackPosts] : feedPosts,
+    data: offset === 0 ? [...legacyLocalPosts, ...imageValidPosts, ...fallbackPosts] : imageValidPosts,
     nextCursor: String(nextOffset),
     hasMore,
   };
